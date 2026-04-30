@@ -44,6 +44,47 @@
       padding: 40px 0;
     }
 
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      color: var(--ink);
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .menu a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 12px;
+      color: var(--ink);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .menu a:hover {
+      color: var(--teal);
+      border-color: #94c9c1;
+      text-decoration: none;
+    }
+
     .hero {
       display: grid;
       grid-template-columns: 1.25fr 0.75fr;
@@ -120,6 +161,18 @@
     .card h3 {
       margin: 0 0 10px;
       font-size: 1.02rem;
+    }
+
+    .course-card {
+      border-top: 4px solid var(--teal);
+    }
+
+    .course-card:nth-child(2) {
+      border-top-color: var(--coral);
+    }
+
+    .course-card:nth-child(3) {
+      border-top-color: var(--gold);
     }
 
     .card p,
@@ -207,6 +260,15 @@
         grid-template-columns: 1fr;
       }
 
+      .site-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .menu {
+        justify-content: flex-start;
+      }
+
       .grid {
         grid-template-columns: 1fr;
       }
@@ -219,6 +281,16 @@
 </head>
 <body>
   <main class="page">
+    <header class="site-header">
+      <a class="brand" href="#">Daniiar Satybaldiev</a>
+      <nav class="menu" aria-label="Main menu">
+        <a href="#courses">Courses</a>
+        <a href="#experience">Experience</a>
+        <a href="#research">Research</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
     <section class="hero">
       <div>
         <p class="eyebrow">Assistant Professor, PhD in Computer Science</p>
@@ -231,13 +303,31 @@
         </p>
       </div>
 
-      <aside class="contact" aria-label="Contact information">
+      <aside class="contact" id="contact" aria-label="Contact information">
         <h2>Contact</h2>
         <p><strong>Email:</strong> <a href="mailto:dsatybaldiev@gmail.com">dsatybaldiev@gmail.com</a></p>
         <p><strong>Phone:</strong> <a href="tel:+85592168084">+855 92 168 084</a></p>
         <p><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/daniiar-satybaldiev">linkedin.com/in/daniiar-satybaldiev</a></p>
         <p><strong>Location:</strong> Bishkek, Kyrgyzstan</p>
       </aside>
+    </section>
+
+    <section class="section" id="courses">
+      <h2>Courses</h2>
+      <div class="grid">
+        <article class="card course-card">
+          <h3>Cyber Security</h3>
+          <p>Foundations of secure systems, threat awareness, network security, data protection, and practical security thinking for modern organizations.</p>
+        </article>
+        <article class="card course-card">
+          <h3>Object-Oriented Programming</h3>
+          <p>Core OOP concepts including classes, objects, inheritance, encapsulation, polymorphism, and practical software design using Java or Python.</p>
+        </article>
+        <article class="card course-card">
+          <h3>Database Management</h3>
+          <p>Relational database design, SQL, normalization, data modeling, and database-backed application development for academic and business systems.</p>
+        </article>
+      </div>
     </section>
 
     <section class="section">
@@ -258,7 +348,7 @@
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" id="experience">
       <h2>Experience</h2>
       <div class="timeline">
         <article class="role">
@@ -310,7 +400,7 @@
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" id="research">
       <h2>Selected Research & Conferences</h2>
       <ul class="publication-list">
         <li>Best Paper Award: Proposing Artificial Intelligence Integration in Educational ERP Systems: A Case Study of MyParagonU.</li>

@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scaling Systems — Lecture Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Fraunces:ital,wght@0,300;0,500;0,700;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --ink-soft: #3d3d5c;
+    --ink-muted: #7b7b9a;
+    --surface: #fafaf8;
+    --surface-2: #f2f1ed;
+    --surface-3: #e8e6df;
+    --green: #2d6a4f;
+    --green-light: #d8f3dc;
+    --green-mid: #52b788;
+    --blue: #1e4d8c;
+    --blue-light: #dbeafe;
+    --blue-mid: #3b82f6;
+    --amber: #92400e;
+    --amber-light: #fef3c7;
+    --coral: #9b2226;
+    --coral-light: #fde8e8;
+    --purple: #4c1d95;
+    --purple-light: #ede9fe;
+    --teal: #0f6e56;
+    --teal-light: #ccfbf1;
+    --gray: #4b5563;
+    --gray-light: #f3f4f6;
+    --border: #d1cfc6;
+    --font-head: 'Fraunces', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink);
+    background: var(--surface);
+  }
+
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2.5rem 5rem;
+  }
+
+  /* ── HEADER ── */
+  .doc-header {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .doc-header .kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 0.5rem;
+  }
+  .doc-header h1 {
+    font-family: var(--font-head);
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 0.75rem;
+  }
+  .doc-header .meta {
+    display: flex;
+    gap: 2rem;
+    font-size: 13px;
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+  }
+  .doc-header .meta span::before { content: '→ '; }
+
+  /* ── DARK OVERVIEW BOX ── */
+  .overview {
+    background: var(--ink);
+    color: #f5f4f0;
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+  }
+  .overview h2 {
+    font-family: var(--font-head);
+    font-size: 1rem;
+    font-weight: 500;
+    font-style: italic;
+    color: #b8b5a8;
+    margin-bottom: 0.75rem;
+  }
+  .overview ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem 2rem;
+  }
+  .overview ul li {
+    font-size: 13.5px;
+    color: #e5e3dc;
+    padding-left: 1rem;
+    position: relative;
+  }
+  .overview ul li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: #6fcf97;
+    font-size: 10px;
+    top: 4px;
+  }
+
+  /* ── TIMELINE STRIP ── */
+  .timeline {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+    font-size: 12px;
+  }
+  .tl-seg {
+    flex: 1;
+    padding: 8px 10px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .tl-seg:last-child { border-right: none; }
+  .tl-seg .tl-time { color: var(--ink-muted); font-size: 10px; display: block; font-family: var(--font-mono); }
+  .tl-seg .tl-topic { color: var(--ink); font-weight: 500; font-size: 11px; font-family: var(--font-mono); }
+  .tl-seg.active { background: var(--ink); }
+  .tl-seg.active .tl-time { color: #9ca3af; }
+  .tl-seg.active .tl-topic { color: #f5f4f0; }
+
+  /* ── SECTION WRAPPER ── */
+  .section { margin-bottom: 3rem; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1.5px solid var(--surface-3);
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--surface);
+    background: var(--ink);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .time-badge {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-muted);
+    border: 1px solid var(--border);
+    padding: 3px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── SUBSECTION HEADER ── */
+  .subsection {
+    margin-bottom: 1.75rem;
+  }
+  .subsection-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+  }
+  .subsection-title .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-green { background: var(--green-mid); }
+  .dot-blue  { background: var(--blue-mid); }
+  .dot-amber { background: #d97706; }
+  .dot-coral { background: #dc2626; }
+  .dot-purple{ background: #7c3aed; }
+  .dot-teal  { background: var(--teal); }
+
+  .subsection-title h3 {
+    font-family: var(--font-head);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* ── CONCEPT CARD ── */
+  .concept-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .concept-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+  }
+  .card-green::before   { background: var(--green-mid); }
+  .card-blue::before    { background: var(--blue-mid); }
+  .card-amber::before   { background: #d97706; }
+  .card-coral::before   { background: #dc2626; }
+  .card-purple::before  { background: #7c3aed; }
+  .card-teal::before    { background: var(--teal); }
+
+  .concept-card .card-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .card-green .card-label   { color: var(--green); }
+  .card-blue .card-label    { color: var(--blue); }
+  .card-amber .card-label   { color: var(--amber); }
+  .card-coral .card-label   { color: var(--coral); }
+  .card-purple .card-label  { color: var(--purple); }
+  .card-teal .card-label    { color: var(--teal); }
+
+  .concept-card p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    margin-bottom: 0.5rem;
+  }
+  .concept-card p:last-child { margin-bottom: 0; }
+
+  /* ── DEFINITION ROW ── */
+  .def-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 0.4rem 1.5rem;
+    margin-bottom: 0.5rem;
+    align-items: start;
+  }
+  .def-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    padding-top: 2px;
+  }
+  .def-value {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  /* ── TAG BADGES ── */
+  .tag-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .tag-green  { background: var(--green-light);  color: var(--green); }
+  .tag-blue   { background: var(--blue-light);   color: var(--blue); }
+  .tag-amber  { background: var(--amber-light);  color: var(--amber); }
+  .tag-coral  { background: var(--coral-light);  color: var(--coral); }
+  .tag-purple { background: var(--purple-light); color: var(--purple); }
+  .tag-teal   { background: var(--teal-light);   color: var(--teal); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-diagram {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin: 0.75rem 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  .flow-diagram .flow-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    margin-bottom: 0.85rem;
+    font-weight: 600;
+  }
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+  }
+  .flow-node {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-size: 12.5px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .flow-node.highlight-green  { background: var(--green-light);  border-color: var(--green-mid); color: var(--green); font-weight: 600; }
+  .flow-node.highlight-blue   { background: var(--blue-light);   border-color: var(--blue-mid);  color: var(--blue);  font-weight: 600; }
+  .flow-node.highlight-amber  { background: var(--amber-light);  border-color: #d97706;           color: var(--amber); font-weight: 600; }
+  .flow-node.highlight-coral  { background: var(--coral-light);  border-color: #dc2626;           color: var(--coral); font-weight: 600; }
+  .flow-node.highlight-purple { background: var(--purple-light); border-color: #7c3aed;           color: var(--purple);font-weight: 600; }
+  .flow-node.highlight-teal   { background: var(--teal-light);   border-color: var(--teal);       color: var(--teal);  font-weight: 600; }
+  .flow-node.dark { background: var(--ink); color: #f5f4f0; border-color: var(--ink); }
+  .flow-arrow { color: var(--ink-muted); font-size: 14px; flex-shrink: 0; }
+  .flow-note { font-size: 11px; color: var(--ink-muted); margin-top: 0.5rem; font-style: italic; }
+
+  /* Vertical flow */
+  .vflow { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+  .vflow-row { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+  .vflow-node {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 20px;
+    font-size: 12.5px;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    white-space: nowrap;
+  }
+  .vflow-node.hl-green  { background: var(--green-light);  border-color: var(--green-mid); color: var(--green);  font-weight: 600; }
+  .vflow-node.hl-blue   { background: var(--blue-light);   border-color: var(--blue-mid);  color: var(--blue);   font-weight: 600; }
+  .vflow-node.hl-amber  { background: var(--amber-light);  border-color: #d97706;           color: var(--amber);  font-weight: 600; }
+  .vflow-node.hl-coral  { background: var(--coral-light);  border-color: #dc2626;           color: var(--coral);  font-weight: 600; }
+  .vflow-node.hl-purple { background: var(--purple-light); border-color: #7c3aed;           color: var(--purple); font-weight: 600; }
+  .vflow-node.hl-teal   { background: var(--teal-light);   border-color: var(--teal);       color: var(--teal);   font-weight: 600; }
+  .vflow-node.hl-dark   { background: var(--ink);          border-color: var(--ink);         color: #f5f4f0;       font-weight: 600; }
+  .vflow-arrow { font-size: 16px; color: var(--ink-muted); margin: 3px 0 3px 20px; line-height: 1; }
+  .vflow-label { font-size: 11px; color: var(--ink-muted); font-family: var(--font-body); margin-left: 4px; }
+
+  /* ── COMPARE GRID ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+  }
+  .compare-cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+  }
+  .compare-cell .cc-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    margin-bottom: 0.4rem;
+  }
+  .compare-cell .cc-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.3rem;
+  }
+  .compare-cell .cc-desc {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  /* ── TWO-COLUMN GRID ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 0.75rem 0;
+  }
+
+  /* ── SHARDING TABLE ── */
+  .shard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 0.75rem 0;
+  }
+  .shard-table th {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 8px 14px;
+    background: var(--ink);
+    color: #f5f4f0;
+    text-align: left;
+  }
+  .shard-table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink-soft);
+  }
+  .shard-table tr:last-child td { border-bottom: none; }
+  .shard-table tr:nth-child(even) td { background: var(--surface-2); }
+  .shard-table .mono { font-family: var(--font-mono); font-size: 12px; color: var(--ink); }
+
+  /* ── EXAMPLE / INSTRUCTOR BOXES ── */
+  .example-box {
+    background: var(--surface-2);
+    border-left: 3px solid var(--green-mid);
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 1.25rem;
+    margin: 0.85rem 0;
+  }
+  .example-box .ex-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+  }
+  .example-box p, .example-box li {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+  }
+  .example-box ul { list-style: none; margin-top: 0.3rem; }
+  .example-box ul li { padding-left: 1.2rem; position: relative; margin-bottom: 3px; }
+  .example-box ul li::before { content: '→'; position: absolute; left: 0; color: var(--green-mid); font-size: 11px; top: 3px; }
+
+  .instructor-note {
+    background: #fdf6e3;
+    border: 1px dashed #d97706;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: 0.85rem 0;
+  }
+  .instructor-note .in-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.35rem;
+    color: var(--amber);
+  }
+  .instructor-note p, .instructor-note li {
+    font-size: 13.5px;
+    color: #713f12;
+    line-height: 1.65;
+    font-style: italic;
+  }
+  .instructor-note ul { list-style: none; margin-top: 0.35rem; }
+  .instructor-note ul li { padding-left: 1.1rem; position: relative; margin-bottom: 3px; }
+  .instructor-note ul li::before { content: '•'; position: absolute; left: 0; color: #d97706; }
+
+  .warning-note {
+    background: var(--coral-light);
+    border-left: 3px solid #dc2626;
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.25rem;
+    margin: 0.85rem 0;
+  }
+  .warning-note .wn-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--coral);
+    margin-bottom: 0.3rem;
+  }
+  .warning-note p {
+    font-size: 13.5px;
+    color: #7f1d1d;
+    line-height: 1.6;
+  }
+
+  /* ── METRIC PILLS ── */
+  .pill-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 0.75rem 0; }
+  .pill {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem 1.2rem;
+    min-width: 120px;
+    flex: 1;
+  }
+  .pill .pill-val {
+    font-family: var(--font-head);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .pill .pill-lab {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── INLINE CODE ── */
+  code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--surface-3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--ink);
+  }
+
+  /* ── BULLET LIST ── */
+  .bullet-list { list-style: none; margin: 0.5rem 0; }
+  .bullet-list li {
+    font-size: 14px;
+    color: var(--ink-soft);
+    padding-left: 1.25rem;
+    position: relative;
+    margin-bottom: 4px;
+    line-height: 1.6;
+  }
+  .bullet-list li::before {
+    content: '–';
+    position: absolute;
+    left: 0;
+    color: var(--ink-muted);
+  }
+  .bullet-list li strong { color: var(--ink); font-weight: 500; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  /* ── TAKEAWAY GRID ── */
+  .takeaway-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 1rem 0;
+  }
+  .takeaway-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+  }
+  .takeaway-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+  .ti-green  { background: var(--green-light);  color: var(--green); }
+  .ti-blue   { background: var(--blue-light);   color: var(--blue); }
+  .ti-amber  { background: var(--amber-light);  color: var(--amber); }
+  .ti-coral  { background: var(--coral-light);  color: var(--coral); }
+  .ti-purple { background: var(--purple-light); color: var(--purple); }
+  .ti-teal   { background: var(--teal-light);   color: var(--teal); }
+  .takeaway-text .t-title { font-size: 13px; font-weight: 500; color: var(--ink); }
+  .takeaway-text .t-desc  { font-size: 12px; color: var(--ink-muted); line-height: 1.5; }
+
+  /* ── DISCUSSION QUESTIONS ── */
+  .discussion-list { list-style: none; margin: 0.75rem 0; }
+  .discussion-list li {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .discussion-list li:last-child { border-bottom: none; }
+  .discussion-list .q-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--surface);
+    background: var(--blue);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ── SUMMARY BAR ── */
+  .summary-bar {
+    background: var(--ink);
+    color: #f5f4f0;
+    border-radius: 12px;
+    padding: 1.75rem 2rem;
+    margin-top: 2rem;
+  }
+  .summary-bar h2 {
+    font-family: var(--font-head);
+    font-size: 1.15rem;
+    font-style: italic;
+    color: #b8b5a8;
+    margin-bottom: 0.75rem;
+  }
+  .summary-bar p {
+    font-size: 14px;
+    color: #e5e3dc;
+    line-height: 1.75;
+  }
+  .summary-bar strong { color: #6fcf97; font-weight: 500; }
+
+  /* ── REGION DIAGRAM ── */
+  .region-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 0.75rem 0;
+  }
+  .region-box {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .region-header {
+    background: var(--ink);
+    color: #f5f4f0;
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .region-body {
+    padding: 0.85rem 1rem;
+    background: var(--surface-2);
+  }
+  .region-body .r-item {
+    font-size: 13px;
+    color: var(--ink-soft);
+    padding: 3px 0;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .region-body .r-item::before { content: '◉'; color: var(--green-mid); font-size: 9px; }
+
+  /* Print */
+  @media print {
+    body { background: white; }
+    .page { padding: 1.5cm 2cm; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <div class="doc-header">
+    <div class="kicker">Master's Program · Software Architecture · Lecture 4</div>
+    <h1>Scaling Systems:<br/>High Availability &amp; Performance Architecture</h1>
+    <div class="meta">
+      <span>40 minutes</span>
+      <span>6 topic blocks</span>
+      <span>Distributed Systems</span>
+    </div>
+  </div>
+
+  <!-- ── OBJECTIVES ── -->
+  <div class="overview">
+    <h2>By the end of this lecture you will be able to…</h2>
+    <ul>
+      <li>Explain why scalability and availability matter</li>
+      <li>Describe how load balancers and API gateways work</li>
+      <li>Compare database replication and sharding strategies</li>
+      <li>Design a multi-region, highly available system</li>
+      <li>Explain how CDNs reduce latency</li>
+      <li>Combine all components into a complete architecture</li>
+    </ul>
+  </div>
+
+  <!-- ── TIMELINE ── -->
+  <div class="timeline">
+    <div class="tl-seg active">
+      <span class="tl-time">0 – 5 min</span>
+      <span class="tl-topic">Introduction</span>
+    </div>
+    <div class="tl-seg">
+      <span class="tl-time">5 – 12 min</span>
+      <span class="tl-topic">LB &amp; Gateway</span>
+    </div>
+    <div class="tl-seg">
+      <span class="tl-time">12 – 20 min</span>
+      <span class="tl-topic">Databases</span>
+    </div>
+    <div class="tl-seg">
+      <span class="tl-time">20 – 30 min</span>
+      <span class="tl-topic">High Availability</span>
+    </div>
+    <div class="tl-seg">
+      <span class="tl-time">30 – 35 min</span>
+      <span class="tl-topic">Performance</span>
+    </div>
+    <div class="tl-seg">
+      <span class="tl-time">35 – 40 min</span>
+      <span class="tl-topic">Full Picture</span>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- SECTION 1 — INTRODUCTION -->
+  <!-- ════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">Why Scale? The Problem with Single Servers</div>
+      <div class="time-badge">0 – 5 min</div>
+    </div>
+
+    <div class="instructor-note">
+      <div class="in-label">Instructor note</div>
+      <p>Open with a real scenario: "Imagine your app goes viral overnight — 10,000 users hit it at once. What happens?" Let students guess. Then build the case for why a single server always fails at scale.</p>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-coral"></div>
+        <h3>The Single Server Problem</h3>
+      </div>
+
+      <div class="concept-card card-coral">
+        <div class="card-label">Core Problem</div>
+        <p>A single server is the simplest architecture — one machine handles all requests, holds all data, and runs all logic. It works perfectly during development, but <strong>fails in three critical ways</strong> as systems grow.</p>
+      </div>
+
+      <div class="two-col">
+        <div class="concept-card card-coral" style="margin-bottom:0">
+          <div class="card-label">Failure 1 — Downtime</div>
+          <p>Any hardware failure, crash, or deployment takes the entire system offline. No redundancy = no recovery. Every minute of downtime is lost revenue and user trust.</p>
+          <div class="tag-row">
+            <span class="tag tag-coral">SPOF — Single Point of Failure</span>
+          </div>
+        </div>
+        <div class="concept-card card-amber" style="margin-bottom:0">
+          <div class="card-label">Failure 2 — Slow Response</div>
+          <p>As traffic grows, the server becomes overloaded. CPU, memory, and I/O are shared across all requests. One slow query can stall everyone. Response time increases non-linearly.</p>
+          <div class="tag-row">
+            <span class="tag tag-amber">Bad UX → User Churn</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="concept-card card-purple" style="margin-top:1rem">
+        <div class="card-label">Failure 3 — Growth → System Collapse</div>
+        <p>Vertical scaling (buying a bigger server) has a hard ceiling. You cannot add RAM or CPU indefinitely. Eventually, no single machine can serve 10M users, and the system needs to be redesigned from scratch — which is far more expensive than planning for scale early.</p>
+        <div class="tag-row">
+          <span class="tag tag-purple">Vertical Scaling has limits</span>
+          <span class="tag tag-purple">Horizontal Scaling is the answer</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-green"></div>
+        <h3>Three Core Goals We'll Solve Today</h3>
+      </div>
+      <div class="compare-grid">
+        <div class="compare-cell">
+          <div class="cc-label">Goal 1</div>
+          <div class="cc-title">Scalability</div>
+          <div class="cc-desc">Handle more users by adding more machines horizontally, not just upgrading one.</div>
+        </div>
+        <div class="compare-cell">
+          <div class="cc-label">Goal 2</div>
+          <div class="cc-title">High Availability</div>
+          <div class="cc-desc">Stay operational even when individual components fail. No single point of failure.</div>
+        </div>
+        <div class="compare-cell">
+          <div class="cc-label">Goal 3</div>
+          <div class="cc-title">Performance</div>
+          <div class="cc-desc">Respond fast regardless of user location or system load through caching and distribution.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- SECTION 2 — LOAD BALANCER & API GATEWAY -->
+  <!-- ════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">Load Balancer &amp; API Gateway</div>
+      <div class="time-badge">5 – 12 min</div>
+    </div>
+
+    <!-- Load Balancer -->
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-blue"></div>
+        <h3>Load Balancer</h3>
+      </div>
+
+      <div class="concept-card card-blue">
+        <div class="card-label">What it does</div>
+        <p>A Load Balancer sits between clients and your server pool. It receives incoming requests and distributes them across multiple backend servers using a defined algorithm. The client never knows which server it's talking to.</p>
+        <p>Think of it like a traffic controller at an intersection — it keeps traffic flowing evenly so no single road becomes a bottleneck.</p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;font-weight:600;">Why we need it</p>
+          <ul class="bullet-list">
+            <li><strong>Prevents overload</strong> — distributes requests so no single server is overwhelmed</li>
+            <li><strong>Improves availability</strong> — if one server fails, others continue serving requests</li>
+            <li><strong>Enables horizontal scaling</strong> — add more servers and the LB uses them automatically</li>
+            <li><strong>Health checks</strong> — regularly pings servers and removes unhealthy ones from rotation</li>
+          </ul>
+        </div>
+        <div class="flow-diagram">
+          <div class="flow-title">Basic Request Flow</div>
+          <div class="flow-row">
+            <div class="flow-node dark">Client</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node highlight-blue">Load Balancer</div>
+          </div>
+          <div style="margin: 6px 0 6px 55px; font-size:11px; color:var(--ink-muted); font-family:var(--font-mono);">distributes to ↓</div>
+          <div class="flow-row" style="flex-wrap:wrap; gap:0.4rem;">
+            <div class="flow-node highlight-green">Server A</div>
+            <div class="flow-node highlight-green">Server B</div>
+            <div class="flow-node highlight-green">Server C</div>
+          </div>
+          <div class="flow-note">All servers run identical application code</div>
+        </div>
+      </div>
+
+      <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;font-weight:600;margin-top:1rem;">Balancing Algorithms — Choose the right one</p>
+      <div class="compare-grid">
+        <div class="compare-cell">
+          <div class="cc-label">Algorithm 1</div>
+          <div class="cc-title">Round Robin</div>
+          <div class="cc-desc">Requests are sent to servers in strict rotation: A → B → C → A → B → C. Simple, works well when all servers have equal capacity.</div>
+        </div>
+        <div class="compare-cell">
+          <div class="cc-label">Algorithm 2</div>
+          <div class="cc-title">Least Connections</div>
+          <div class="cc-desc">Sends each new request to the server with the fewest active connections. Better for variable-length requests (e.g. file uploads vs. simple API calls).</div>
+        </div>
+        <div class="compare-cell">
+          <div class="cc-label">Algorithm 3</div>
+          <div class="cc-title">IP Hash</div>
+          <div class="cc-desc">Hashes the client's IP address to determine which server handles their requests. Ensures a user always hits the same server — useful for session-based apps.</div>
+        </div>
+      </div>
+
+      <div class="example-box" style="margin-top:1rem;">
+        <div class="ex-label">When to use which algorithm</div>
+        <ul>
+          <li><strong>Round Robin</strong> — Stateless microservices where requests are equal in cost</li>
+          <li><strong>Least Connections</strong> — Media streaming, file processing with variable request duration</li>
+          <li><strong>IP Hash</strong> — Shopping cart or session-based apps that require server affinity</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- API Gateway -->
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-purple"></div>
+        <h3>API Gateway</h3>
+      </div>
+
+      <div class="concept-card card-purple">
+        <div class="card-label">What it does</div>
+        <p>An API Gateway is a single entry point that all client requests flow through before they reach your services. It handles cross-cutting concerns — things every service needs — in one place rather than duplicating logic across dozens of microservices.</p>
+        <p>If a Load Balancer is the traffic controller, the API Gateway is the security checkpoint and reception desk — it verifies who you are, decides where you go, and logs everything.</p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;font-weight:600;">Responsibilities</p>
+          <ul class="bullet-list">
+            <li><strong>Authentication</strong> — validates JWT tokens, API keys, or OAuth before requests reach services</li>
+            <li><strong>Routing</strong> — maps <code>/api/orders</code> → Orders Service, <code>/api/users</code> → Users Service</li>
+            <li><strong>Rate Limiting</strong> — blocks clients that exceed request quotas (e.g. 1000 req/min)</li>
+            <li><strong>Logging &amp; Monitoring</strong> — centralized request logging for observability</li>
+            <li><strong>SSL Termination</strong> — handles HTTPS at the edge; internal traffic uses HTTP</li>
+            <li><strong>Request Transformation</strong> — converts legacy XML to JSON, merges responses</li>
+          </ul>
+        </div>
+        <div class="flow-diagram">
+          <div class="flow-title">Full Request Stack</div>
+          <div class="vflow">
+            <div class="vflow-node hl-dark">Client (Browser / App)</div>
+            <div class="vflow-arrow">↓</div>
+            <div class="vflow-node hl-purple">API Gateway <span class="vflow-label">control layer</span></div>
+            <div class="vflow-arrow">↓</div>
+            <div class="vflow-node hl-blue">Load Balancer <span class="vflow-label">distribution layer</span></div>
+            <div class="vflow-arrow">↓</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <div class="vflow-node hl-green" style="font-size:11px;padding:5px 12px;">Orders</div>
+              <div class="vflow-node hl-green" style="font-size:11px;padding:5px 12px;">Users</div>
+              <div class="vflow-node hl-green" style="font-size:11px;padding:5px 12px;">Payments</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="instructor-note">
+        <div class="in-label">Key distinction to emphasize</div>
+        <p>Gateway ≠ Load Balancer. The <strong>API Gateway</strong> is a smart, application-aware layer that handles business-level concerns (auth, routing, rate limiting). The <strong>Load Balancer</strong> is a network-level layer that distributes traffic by connection/IP. They solve different problems and work together — gateway sits upstream of the load balancer.</p>
+      </div>
+
+      <div class="warning-note">
+        <div class="wn-label">Single Point of Failure Warning</div>
+        <p>The API Gateway can itself become a bottleneck or SPOF. Production systems always deploy multiple gateway instances behind a load balancer to ensure the gateway is itself highly available.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- SECTION 3 — DATABASES & SCALING -->
+  <!-- ════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">Databases &amp; Scaling Strategies</div>
+      <div class="time-badge">12 – 20 min</div>
+    </div>
+
+    <div class="concept-card card-coral">
+      <div class="card-label">The Database Bottleneck Problem</div>
+      <p>Application servers are easy to scale — just add more of them behind a load balancer. But databases are stateful: they hold your data, so you can't simply spin up ten copies. A single database becomes the chokepoint of the entire system under heavy read or write load. Two strategies address this: <strong>Replication</strong> (copying data) and <strong>Sharding</strong> (splitting data).</p>
+    </div>
+
+    <!-- Replication -->
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-blue"></div>
+        <h3>Database Replication</h3>
+      </div>
+
+      <div class="concept-card card-blue">
+        <div class="card-label">Core Concept</div>
+        <p>Replication copies data from a <strong>primary (master)</strong> database to one or more <strong>replica (slave)</strong> databases. Writes always go to the primary; reads can be distributed across replicas. The primary asynchronously pushes changes to replicas using a write-ahead log.</p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;font-weight:600;">Master–Slave (Primary–Replica)</p>
+          <div class="flow-diagram" style="margin-bottom:0.75rem;">
+            <div class="vflow">
+              <div class="vflow-node hl-blue">Primary DB (writes)</div>
+              <div class="vflow-arrow">↓ replicates to</div>
+              <div style="display:flex; gap:8px;">
+                <div class="vflow-node hl-green" style="font-size:11px;padding:5px 12px;">Replica 1 (reads)</div>
+                <div class="vflow-node hl-green" style="font-size:11px;padding:5px 12px;">Replica 2 (reads)</div>
+              </div>
+            </div>
+          </div>
+          <ul class="bullet-list">
+            <li>Application writes go to Primary only</li>
+            <li>Read queries are spread across Replicas</li>
+            <li>If Primary fails → promote a Replica</li>
+          </ul>
+        </div>
+        <div>
+          <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;font-weight:600;">Multi-Master Replication</p>
+          <div class="flow-diagram" style="margin-bottom:0.75rem;">
+            <div class="flow-row">
+              <div class="flow-node highlight-blue">Master A</div>
+              <div class="flow-arrow">⇄</div>
+              <div class="flow-node highlight-blue">Master B</div>
+            </div>
+            <div class="flow-note">Both accept reads &amp; writes; sync each other</div>
+          </div>
+          <ul class="bullet-list">
+            <li>Both nodes accept writes</li>
+            <li>Useful for geographic distribution</li>
+            <li>Requires conflict resolution logic</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:0.75rem;">
+        <div class="concept-card card-green" style="margin-bottom:0;">
+          <div class="card-label">Benefits</div>
+          <ul class="bullet-list">
+            <li><strong>High Availability</strong> — replicas serve traffic if primary fails</li>
+            <li><strong>Read Scaling</strong> — 10 replicas = 10× read throughput</li>
+            <li><strong>Backup</strong> — replicas can serve as live backups</li>
+            <li><strong>Low latency reads</strong> — replicas can be placed closer to users</li>
+          </ul>
+        </div>
+        <div class="concept-card card-amber" style="margin-bottom:0;">
+          <div class="card-label">Trade-offs</div>
+          <ul class="bullet-list">
+            <li><strong>Eventual consistency</strong> — replicas may lag behind primary by milliseconds</li>
+            <li><strong>Read-your-writes problem</strong> — user may not immediately see their own write</li>
+            <li><strong>Replication lag</strong> — under heavy write load, lag can grow</li>
+            <li><strong>Write bottleneck remains</strong> — all writes still go to one primary</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="ex-label">Real-World Use</div>
+        <p>Instagram uses read replicas extensively. Their user feed reads outnumber writes by ~100:1. By routing reads to replicas, the primary only handles new post writes, dramatically reducing its load.</p>
+      </div>
+    </div>
+
+    <!-- Sharding -->
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-teal"></div>
+        <h3>Sharding — Horizontal Database Scaling</h3>
+      </div>
+
+      <div class="concept-card card-teal">
+        <div class="card-label">Core Concept</div>
+        <p>Sharding splits your data horizontally across multiple databases called <strong>shards</strong>. Each shard holds a distinct subset of the full dataset. Unlike replication (where all shards have all data), each shard has <strong>only its portion</strong> of the data. A shard key determines which shard stores each record.</p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;font-weight:600;">Without Sharding</p>
+          <div class="flow-diagram">
+            <div class="vflow-node hl-coral" style="width:100%;text-align:center;">1 DB → 10 million users</div>
+            <div class="vflow-arrow" style="margin-left:auto;margin-right:auto;">↓</div>
+            <p style="font-size:12px;color:var(--coral);font-family:var(--font-mono);text-align:center;">Overloaded. Slow. Single point of failure.</p>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;font-weight:600;">With Sharding</p>
+          <div class="flow-diagram">
+            <div class="vflow-node hl-teal" style="font-size:11px;padding:5px 12px;margin-bottom:4px;">DB Shard 1 → users 1 – 1,000,000</div>
+            <div class="vflow-node hl-teal" style="font-size:11px;padding:5px 12px;margin-bottom:4px;">DB Shard 2 → users 1M – 2,000,000</div>
+            <div class="vflow-node hl-teal" style="font-size:11px;padding:5px 12px;">DB Shard 3 → users 2M – 3,000,000</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hash Sharding -->
+      <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;font-weight:600;margin-top:1rem;">Hash Sharding Strategy</p>
+
+      <div class="concept-card card-teal">
+        <div class="card-label">How it works</div>
+        <p>Apply a hash function to the shard key (e.g. <code>user_id</code>), then use the modulo operator to determine which shard receives the record. This distributes data evenly across shards regardless of the data's natural distribution.</p>
+      </div>
+
+      <div class="flow-diagram">
+        <div class="flow-title">Hash Sharding Example — Insert user_id = 123, 3 shards total</div>
+        <div class="flow-row">
+          <div class="flow-node dark">user_id = 123</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node highlight-teal">hash(123) = 456789</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node highlight-teal">456789 % 3 = 0</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node highlight-green">Shard 0</div>
+        </div>
+        <div class="flow-note">user_id 124: hash(124) % 3 = 1 → Shard 1 &nbsp;|&nbsp; user_id 125: hash(125) % 3 = 2 → Shard 2</div>
+      </div>
+
+      <div class="two-col" style="margin-top:0.75rem;">
+        <div class="concept-card card-green" style="margin-bottom:0;">
+          <div class="card-label">Benefits</div>
+          <ul class="bullet-list">
+            <li><strong>Even distribution</strong> — hash function prevents data concentration</li>
+            <li><strong>Avoids hotspots</strong> — no single shard becomes overloaded</li>
+            <li><strong>Write scalability</strong> — writes are distributed across all shards</li>
+          </ul>
+        </div>
+        <div class="concept-card card-coral" style="margin-bottom:0;">
+          <div class="card-label">Trade-off — Rebalancing Problem</div>
+          <ul class="bullet-list">
+            <li>Adding a 4th shard changes the modulo: <code>% 4</code> instead of <code>% 3</code></li>
+            <li>Almost all records now map to a different shard</li>
+            <li>Requires migrating the majority of data — expensive and risky</li>
+            <li>Solution: <strong>Consistent Hashing</strong> minimizes reshuffling (advanced topic)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="instructor-note" style="margin-top:0.75rem;">
+        <div class="in-label">Replication vs. Sharding — When to use each</div>
+        <ul>
+          <li><strong>Replication</strong> → when reads far outnumber writes; need high availability</li>
+          <li><strong>Sharding</strong> → when data volume or write load exceeds what one machine can handle</li>
+          <li><strong>Both together</strong> → production-grade systems use both: each shard is also replicated</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- SECTION 4 — HIGH AVAILABILITY -->
+  <!-- ════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div class="section-title">High Availability Architecture</div>
+      <div class="time-badge">20 – 30 min</div>
+    </div>
+
+    <div class="concept-card card-green">
+      <div class="card-label">Definition</div>
+      <p><strong>High Availability (HA)</strong> means a system stays operational and accessible even when individual components fail. HA is measured as a percentage of uptime over time. The goal is to eliminate every single point of failure so there is no one component whose failure takes down the system.</p>
+      <div class="pill-row" style="margin-top:0.75rem;">
+        <div class="pill"><div class="pill-val">99%</div><div class="pill-lab">~3.6 days downtime/year</div></div>
+        <div class="pill"><div class="pill-val">99.9%</div><div class="pill-lab">~8.7 hours/year</div></div>
+        <div class="pill"><div class="pill-val">99.99%</div><div class="pill-lab">~52 minutes/year</div></div>
+        <div class="pill"><div class="pill-val">99.999%</div><div class="pill-lab">~5 minutes/year ("Five 9s")</div></div>
+      </div>
+    </div>
+
+    <!-- Technique 1: Redundancy -->
+    <div class="subsection" style="margin-top:1.25rem;">
+      <div class="subsection-title">
+        <div class="dot dot-blue"></div>
+        <h3>Technique 1 — Redundancy</h3>
+      </div>
+      <div class="concept-card card-blue">
+        <div class="card-label">Concept</div>
+        <p>Redundancy means running <strong>multiple identical instances</strong> of every critical component. If one fails, the others continue serving requests without interruption. There is no single component that, if removed, breaks the system.</p>
+        <ul class="bullet-list" style="margin-top:0.5rem;">
+          <li><strong>Multiple application servers</strong> behind a load balancer — any one can be taken down</li>
+          <li><strong>Multiple DB replicas</strong> — reads continue even if two replicas fail simultaneously</li>
+          <li><strong>Multiple load balancers</strong> — active-passive or active-active pairs</li>
+          <li><strong>Multiple API Gateway instances</strong> — always deploy more than one</li>
+          <li><strong>Multiple availability zones</strong> — AWS/GCP zones within a region are physically isolated</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Technique 2: Failover -->
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-amber"></div>
+        <h3>Technique 2 — Failover</h3>
+      </div>
+      <div class="concept-card card-amber">
+        <div class="card-label">Concept</div>
+        <p>Failover is the automatic process of switching to a backup component when the active one fails. The switchover should be fast enough (ideally milliseconds) that users experience at most a brief pause, not an outage.</p>
+      </div>
+      <div class="two-col">
+        <div class="concept-card card-blue" style="margin-bottom:0;">
+          <div class="card-label">Active–Passive Failover</div>
+          <p>One active node handles all traffic. A passive standby node is ready but idle. On failure, the passive node is promoted and traffic is redirected to it.</p>
+          <div class="tag-row"><span class="tag tag-blue">Simpler</span><span class="tag tag-blue">Some recovery time</span></div>
+        </div>
+        <div class="concept-card card-green" style="margin-bottom:0;">
+          <div class="card-label">Active–Active Failover</div>
+          <p>Both nodes handle traffic simultaneously. If one fails, the other absorbs all traffic with no downtime. Also provides load distribution.</p>
+          <div class="tag-row"><span class="tag tag-green">No downtime</span><span class="tag tag-green">More complex</span></div>
+        </div>
+      </div>
+      <div class="flow-diagram" style="margin-top:0.75rem;">
+        <div class="flow-title">Failover Flow — Database Primary Failure</div>
+        <div class="flow-row">
+          <div class="flow-node highlight-coral">Primary DB FAILS</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">Health check detects failure</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node highlight-green">Replica promoted to Primary</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">Traffic redirected</div>
+        </div>
+        <div class="flow-note">Automated failover typically completes in 30–60 seconds with tools like AWS RDS Multi-AZ</div>
+      </div>
+    </div>
+
+    <!-- Technique 3: Multi-Region -->
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-purple"></div>
+        <h3>Technique 3 — Multi-Region Deployment</h3>
+      </div>
+      <div class="concept-card card-purple">
+        <div class="card-label">Concept</div>
+        <p>Multi-region deployment runs your entire system stack in <strong>multiple geographic locations</strong> simultaneously. Each region is independent — it has its own application servers, databases, and supporting infrastructure. A Global Load Balancer routes each user to the closest region.</p>
+        <p>This protects against regional disasters (data center fire, natural disaster, network outage) and also dramatically reduces latency for geographically distributed users.</p>
+      </div>
+
+      <div class="region-grid">
+        <div class="region-box">
+          <div class="region-header">Region 1 — Europe (Frankfurt)</div>
+          <div class="region-body">
+            <div class="r-item">App Servers (3 instances)</div>
+            <div class="r-item">Database Primary</div>
+            <div class="r-item">Database Replica × 2</div>
+            <div class="r-item">Cache Layer (Redis)</div>
+            <div class="r-item">Internal Load Balancer</div>
+          </div>
+        </div>
+        <div class="region-box">
+          <div class="region-header">Region 2 — Asia Pacific (Singapore)</div>
+          <div class="region-body">
+            <div class="r-item">App Servers (3 instances)</div>
+            <div class="r-item">Database Replica (primary for reads)</div>
+            <div class="r-item">Database Replica × 2</div>
+            <div class="r-item">Cache Layer (Redis)</div>
+            <div class="r-item">Internal Load Balancer</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-diagram" style="margin-top:0.75rem;">
+        <div class="flow-title">Global Routing</div>
+        <div class="flow-row">
+          <div class="flow-node dark">Any user globally</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node highlight-purple">Global Load Balancer</div>
+        </div>
+        <div style="margin:6px 0 6px 0;font-size:11px;color:var(--ink-muted);font-family:var(--font-mono);">routes by latency / geolocation to ↓</div>
+        <div class="flow-row">
+          <div class="flow-node highlight-blue">EU Region</div>
+          <div class="flow-arrow">or</div>
+          <div class="flow-node highlight-green">APAC Region</div>
+          <div class="flow-arrow">or</div>
+          <div class="flow-node highlight-amber">US Region</div>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:0.75rem;">
+        <div class="concept-card card-green" style="margin-bottom:0;">
+          <div class="card-label">Benefits</div>
+          <ul class="bullet-list">
+            <li><strong>Disaster recovery</strong> — entire region can go down without global outage</li>
+            <li><strong>Low latency</strong> — users connect to the nearest region</li>
+            <li><strong>Data sovereignty</strong> — EU user data stays in EU for compliance</li>
+            <li><strong>Traffic isolation</strong> — a spike in one region doesn't affect others</li>
+          </ul>
+        </div>
+        <div class="concept-card card-amber" style="margin-bottom:0;">
+          <div class="card-label">Challenges</div>
+          <ul class="bullet-list">
+            <li><strong>Data consistency</strong> — syncing databases across regions introduces lag</li>
+            <li><strong>Cost</strong> — running full stacks in 3 regions triples infrastructure cost</li>
+            <li><strong>Conflict resolution</strong> — concurrent writes to different regions need careful handling</li>
+            <li><strong>Operational complexity</strong> — deployments must be coordinated across all regions</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="ex-label">Real World — Netflix Multi-Region</div>
+        <p>Netflix operates in 3 AWS regions simultaneously (US East, US West, EU). When the entire US East region had a major outage in 2012, Netflix automatically shifted all traffic to US West with no user-facing downtime. Their multi-region investment paid for itself in that one incident.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- SECTION 5 — PERFORMANCE OPTIMIZATION -->
+  <!-- ════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div class="section-title">Performance Optimization — CDN</div>
+      <div class="time-badge">30 – 35 min</div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-teal"></div>
+        <h3>Content Delivery Network (CDN)</h3>
+      </div>
+
+      <div class="concept-card card-teal">
+        <div class="card-label">What it does</div>
+        <p>A CDN is a globally distributed network of <strong>edge servers</strong> — also called Points of Presence (PoPs) — that cache content close to users. When a user requests an asset, the CDN serves it from the nearest edge server instead of sending the request all the way to your origin server.</p>
+        <p>The fundamental insight: <strong>the speed of light is a real constraint</strong>. A request from Bishkek, Kyrgyzstan to a server in Virginia, USA travels ~10,000 km. A CDN edge server in Frankfurt is ~4,000 km closer. Physics alone makes CDN-served content faster.</p>
+      </div>
+
+      <div class="flow-diagram">
+        <div class="flow-title">Without CDN vs. With CDN — User in Bishkek, Kyrgyzstan loading an image</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div>
+            <p style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--coral);font-weight:600;margin-bottom:.5rem;">Without CDN</p>
+            <div class="flow-row">
+              <div class="flow-node dark">User (KG)</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-node highlight-coral">Origin (US)</div>
+            </div>
+            <div style="font-size:12px;color:var(--coral);font-family:var(--font-mono);margin-top:4px;">~250ms round-trip latency</div>
+          </div>
+          <div>
+            <p style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);font-weight:600;margin-bottom:.5rem;">With CDN</p>
+            <div class="flow-row">
+              <div class="flow-node dark">User (KG)</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-node highlight-teal">Edge (Frankfurt)</div>
+            </div>
+            <div style="font-size:12px;color:var(--teal);font-family:var(--font-mono);margin-top:4px;">~40ms round-trip latency (~6× faster)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:0.75rem;">
+        <div>
+          <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;font-weight:600;">What to cache on CDN</p>
+          <ul class="bullet-list">
+            <li><strong>Images &amp; videos</strong> — the majority of page weight</li>
+            <li><strong>Static files</strong> — CSS, JavaScript, fonts, HTML templates</li>
+            <li><strong>API responses</strong> — non-personalized, read-heavy endpoints</li>
+            <li><strong>Software downloads</strong> — large, infrequently changing files</li>
+          </ul>
+          <div class="tag-row" style="margin-top:0.75rem;">
+            <span class="tag tag-coral">Never cache: user-specific data</span>
+            <span class="tag tag-coral">Never cache: real-time data</span>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;font-weight:600;">Benefits</p>
+          <ul class="bullet-list">
+            <li><strong>Faster load times</strong> — content served from nearby edge</li>
+            <li><strong>Reduced backend load</strong> — origin receives only cache misses</li>
+            <li><strong>DDoS protection</strong> — CDN absorbs attack traffic at the edge</li>
+            <li><strong>Better SEO</strong> — page speed directly impacts search ranking</li>
+            <li><strong>Cost savings</strong> — less bandwidth consumed at origin</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="concept-card card-teal" style="margin-top:0.75rem;">
+        <div class="card-label">How CDN Cache Works</div>
+        <p><strong>Cache Hit:</strong> User requests <code>image.jpg</code>. Edge server has it cached → serves it immediately, no origin request.</p>
+        <p><strong>Cache Miss:</strong> User requests <code>new-image.jpg</code>. Edge server doesn't have it → fetches from origin, caches it, serves it. Subsequent users get the cached version.</p>
+        <p>Cache expiry is controlled via HTTP headers: <code>Cache-Control: max-age=86400</code> tells CDN to cache for 24 hours. After expiry, the CDN re-fetches from origin.</p>
+      </div>
+
+      <div class="example-box">
+        <div class="ex-label">CDN Providers &amp; Their Reach</div>
+        <ul>
+          <li><strong>Cloudflare</strong> — 300+ edge locations worldwide, includes DDoS protection</li>
+          <li><strong>AWS CloudFront</strong> — integrated with AWS infrastructure, 450+ PoPs</li>
+          <li><strong>Akamai</strong> — oldest, largest; 4000+ PoPs, used by major enterprises and governments</li>
+          <li><strong>Fastly</strong> — real-time purging, popular for dynamic content caching</li>
+        </ul>
+      </div>
+
+      <div class="instructor-note">
+        <div class="in-label">Discussion prompt</div>
+        <p>"Where else could we add caching besides the CDN edge?" — Expected answers: in-memory cache (Redis/Memcached) inside the application tier, database query cache, browser cache, reverse proxy cache (Nginx). Let students explore the idea that caching can exist at multiple levels of the stack.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- SECTION 6 — FULL ARCHITECTURE -->
+  <!-- ════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div class="section-title">Putting It All Together</div>
+      <div class="time-badge">35 – 40 min</div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-green"></div>
+        <h3>Complete High-Availability Architecture</h3>
+      </div>
+
+      <div class="two-col">
+        <div class="flow-diagram" style="padding:1.5rem;">
+          <div class="flow-title">Full Request Stack — Top to Bottom</div>
+          <div class="vflow">
+            <div class="vflow-node hl-dark">User (anywhere in the world)</div>
+            <div class="vflow-arrow">↓</div>
+            <div class="vflow-node hl-teal">CDN Edge Server <span class="vflow-label">static assets cached here</span></div>
+            <div class="vflow-arrow">↓ cache miss only</div>
+            <div class="vflow-node hl-purple">API Gateway <span class="vflow-label">auth, rate-limiting, routing</span></div>
+            <div class="vflow-arrow">↓</div>
+            <div class="vflow-node hl-blue">Load Balancer <span class="vflow-label">distributes to healthy instances</span></div>
+            <div class="vflow-arrow">↓</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <div class="vflow-node hl-green" style="font-size:11px;padding:5px 10px;">App Server A</div>
+              <div class="vflow-node hl-green" style="font-size:11px;padding:5px 10px;">App Server B</div>
+              <div class="vflow-node hl-green" style="font-size:11px;padding:5px 10px;">App Server C</div>
+            </div>
+            <div class="vflow-arrow">↓</div>
+            <div class="vflow-node hl-blue">Primary Database <span class="vflow-label">writes only</span></div>
+            <div class="vflow-arrow">↓ replicates to</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <div class="vflow-node" style="font-size:11px;padding:5px 10px;background:var(--green-light);border-color:var(--green-mid);color:var(--green);">Replica 1 (reads)</div>
+              <div class="vflow-node" style="font-size:11px;padding:5px 10px;background:var(--green-light);border-color:var(--green-mid);color:var(--green);">Replica 2 (reads)</div>
+            </div>
+            <div class="vflow-arrow">↓ if data > 1 shard</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <div class="vflow-node hl-amber" style="font-size:11px;padding:5px 10px;">Shard A</div>
+              <div class="vflow-node hl-amber" style="font-size:11px;padding:5px 10px;">Shard B</div>
+              <div class="vflow-node hl-amber" style="font-size:11px;padding:5px 10px;">Shard C</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:13px;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;font-weight:600;">Each layer solves a specific problem</p>
+          <div class="takeaway-grid" style="grid-template-columns:1fr;">
+            <div class="takeaway-item">
+              <div class="takeaway-icon ti-teal">CDN</div>
+              <div class="takeaway-text">
+                <div class="t-title">CDN — Performance</div>
+                <div class="t-desc">Caches static assets at the edge, reducing latency for global users and backend load</div>
+              </div>
+            </div>
+            <div class="takeaway-item">
+              <div class="takeaway-icon ti-purple">GW</div>
+              <div class="takeaway-text">
+                <div class="t-title">API Gateway — Control</div>
+                <div class="t-desc">Single entry point for auth, routing, rate limiting, and observability</div>
+              </div>
+            </div>
+            <div class="takeaway-item">
+              <div class="takeaway-icon ti-blue">LB</div>
+              <div class="takeaway-text">
+                <div class="t-title">Load Balancer — Distribution</div>
+                <div class="t-desc">Spreads traffic across healthy servers; enables horizontal scaling</div>
+              </div>
+            </div>
+            <div class="takeaway-item">
+              <div class="takeaway-icon ti-green">REP</div>
+              <div class="takeaway-text">
+                <div class="t-title">Replication — Availability</div>
+                <div class="t-desc">Read replicas scale reads; failover ensures no data loss</div>
+              </div>
+            </div>
+            <div class="takeaway-item">
+              <div class="takeaway-icon ti-amber">SHD</div>
+              <div class="takeaway-text">
+                <div class="t-title">Sharding — Scalability</div>
+                <div class="t-desc">Distributes data volume and write load across multiple databases</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discussion Questions -->
+    <div class="subsection">
+      <div class="subsection-title">
+        <div class="dot dot-amber"></div>
+        <h3>Discussion Questions</h3>
+      </div>
+      <p style="font-size:14px;color:var(--ink-soft);margin-bottom:0.75rem;">Use these to close the lecture and check understanding. Give students 1 minute to think before taking answers.</p>
+      <div style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden;">
+        <ul class="discussion-list">
+          <li>
+            <div class="q-num">1</div>
+            <div><strong>When should we use sharding instead of replication?</strong> — Think about what problem each solves. Replication addresses availability and read scaling. Sharding addresses data volume and write scaling. When your total data size or write throughput exceeds what one server can handle, sharding becomes necessary.</div>
+          </li>
+          <li>
+            <div class="q-num">2</div>
+            <div><strong>What happens if the API Gateway itself fails?</strong> — The entire system becomes inaccessible, because all traffic routes through it. This means the API Gateway must itself be highly available: run multiple instances, behind a load balancer, in multiple availability zones. The gateway cannot be a single point of failure.</div>
+          </li>
+          <li>
+            <div class="q-num">3</div>
+            <div><strong>Why is eventual consistency acceptable in some systems?</strong> — A replica being 50ms behind the primary is fine for a social media feed — seeing a post appear slightly later doesn't matter. But for a bank balance or inventory count, strong consistency is required. The CAP theorem formalizes this trade-off: in a distributed system, you must choose between Consistency and Availability when a network partition occurs.</div>
+          </li>
+          <li>
+            <div class="q-num">4</div>
+            <div><strong>Where else would you add caching besides the CDN?</strong> — Expected answers: in-memory cache (Redis/Memcached) between app servers and database; browser cache via HTTP headers; application-level memoization; database query cache. Every layer of the stack can benefit from caching appropriately scoped data.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CLOSING SUMMARY ── -->
+  <div class="summary-bar">
+    <h2>Lecture Summary</h2>
+    <p>
+      Scalable, highly available systems are built in layers. <strong>No single technique solves everything.</strong> A Load Balancer distributes traffic, but breaks without redundancy. Replication improves reads and availability, but writes still bottleneck on one primary. Sharding solves data scale, but complicates rebalancing. Multi-region solves geographic resilience, but introduces consistency challenges. CDN improves performance for static content, but not for dynamic data.<br/><br/>
+      The lesson: <strong>every architectural decision trades one problem for another</strong>. A senior engineer's skill is knowing which trade-off is acceptable for their specific context — user base, data model, team size, and cost constraints.
+    </p>
+  </div>
+
+</div>
+</body>
+</html>
